@@ -32,7 +32,7 @@ JARS      = ['../gitlet.jar', '../gitlet-app.jar']
 GITLET    = 'java -jar ../../gitlet.jar'
 GITLETAPP = 'java -jar ../../gitlet-app.jar'
 BOTHMODES = false
-MODE      = 'APP'
+MODE      = 'CS61B'
 
 
 
