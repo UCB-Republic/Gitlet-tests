@@ -100,6 +100,9 @@ def read_case
 end
 
 def write_case(filename, data)
+  dir = filename + '.d'
+  FileUtils.mkdir_p(dir)
+
   open(filename, ?w, 0740) do |f|
     f.write("#! /usr/bin/env bash\n\n")
     f.puts 'function abort() {'
@@ -108,6 +111,11 @@ def write_case(filename, data)
     f.puts '}'
     f.puts
     f.puts 'mkdir -p actual || abort "Failed to create test directory"'
+    f.puts
+    f.puts 'function fail() {'
+    f.puts "    { rm -rf '../#{dir}/actual' && mv ../actual '../#{dir}/'; } || abort 'Failed to save program output'"
+    f.puts '    abort "$1"'
+    f.puts '}'
     f.puts
 
     # TODO use shared .err and .out when identical
@@ -155,17 +163,16 @@ def write_case_mode(filename, f, mode, data)
         f.puts "#{gitlet} #{cmd}" + ' > ../actual/stdout 2> ../actual/stderr'
 
         f.puts "TESTERVAR_TERMSTAT=$?"
-        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || abort \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
+        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || fail \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
 
         dir = filename + '.d'
-        FileUtils.mkdir_p(dir)
         expected_out = "#{dir}/#{run_cnt}#{suffix}.out"
         expected_err = "#{dir}/#{run_cnt}#{suffix}.err"
         open(expected_out, ?w) {|f2| f2.puts(stdout) }
         open(expected_err, ?w) {|f2| f2.puts("WARNING: Using APP mode, not suitable for CS 61B submission") if mode != 'CS61B'
                                      f2.puts(stderr) }
-        f.puts "diff -q ../actual/stdout ../'#{expected_out}' || abort 'Failure: stdout differs from expected version'"
-        f.puts "diff -q ../actual/stderr ../'#{expected_err}' || abort 'Failure: stderr differs from expected version'"
+        f.puts "diff -q ../actual/stdout ../'#{expected_out}' || fail 'Failure: stdout differs from expected version'"
+        f.puts "diff -q ../actual/stderr ../'#{expected_err}' || fail 'Failure: stderr differs from expected version'"
 
       else # ouch
     end
