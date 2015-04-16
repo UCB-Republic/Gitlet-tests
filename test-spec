@@ -1,3 +1,17 @@
+==================== argv (no subcommand)
+%
+=> 0
+=> 2
+! Need a subcommand
+
+
+==================== argv (unknown subcommand)
+% whosyourdaddy
+=> 0
+=> 2
+! Unknown command whosyourdaddy
+
+
 ==================== init (normal)
 % init
 # TODO @ init
@@ -27,6 +41,61 @@ $ chmod u-w .
 => 0
 => 1
 ! Failed to create directory: .gitlet
+
+
+==================== status (empty repo)
+% init
+% status
+: === Branches ===
+: *master
+:
+: === Staged Files ===
+:
+: === Files Marked for Removal ===
+
+
+==================== status (example from spec)
+$ mkdir some_folder
+$ touch wug.txt some_folder/wugs.txt goodbye.txt
+% init
+% branch other-branch
+% add goodbye.txt
+% commit 'Add goodbye.txt'
+% add wug.txt
+% add some_folder/wugs.txt
+% rm goodbye.txt
+% status
+: === Branches ===
+: *master
+: other-branch
+:
+: === Staged Files ===
+: wug.txt
+: some_folder/wugs.txt
+:
+: === Files Marked for Removal ===
+: goodbye.txt
+
+
+==================== commit (no commit message)
+% init
+$ touch foo
+% add foo
+% commit
+=> 0
+: Please enter a commit message.
+=> 2
+! Please enter a commit message.
+
+
+==================== commit (empty commit)
+% init
+% commit 'Empty commit (should fail)'
+=> 0
+: No changes added to the commit.
+=> 1
+! No changes added to the commit.
+
 
 
 
