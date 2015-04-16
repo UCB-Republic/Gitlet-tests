@@ -165,14 +165,18 @@ def write_case_mode(filename, f, mode, data)
         f.puts "TESTERVAR_TERMSTAT=$?"
         f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || fail \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
 
-        dir = filename + '.d'
-        expected_out = "#{dir}/#{run_cnt}#{suffix}.out"
-        expected_err = "#{dir}/#{run_cnt}#{suffix}.err"
-        open(expected_out, ?w) {|f2| f2.puts(stdout) }
-        open(expected_err, ?w) {|f2| f2.puts("WARNING: Using APP mode, not suitable for CS 61B submission") if mode != 'CS61B'
-                                     f2.puts(stderr) }
-        f.puts "diff -q ../actual/stdout ../'#{expected_out}' || fail 'Failure: stdout differs from expected version'"
-        f.puts "diff -q ../actual/stderr ../'#{expected_err}' || fail 'Failure: stderr differs from expected version'"
+        check_output = proc {|stream, content|
+          expected = "#{filename}.d/#{run_cnt}#{suffix}.#{stream}"
+          content.unshift("WARNING: Using APP mode, not suitable for CS 61B submission") if stream == 'err' && mode == 'APP'
+          if content.empty?
+            f.puts "diff -q ../actual/std#{stream} /dev/null || fail 'Failure: std#{stream} should not be empty'"
+          else
+            open(expected, ?w) {|f2| f2.puts(content) }
+            f.puts "diff -q ../actual/std#{stream} ../'#{expected}' || fail 'Failure: std#{stream} differs from expected version'"
+          end
+        }
+        check_output.call('out', stdout)
+        check_output.call('err', stderr)
 
       else # ouch
     end
