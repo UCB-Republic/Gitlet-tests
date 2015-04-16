@@ -28,11 +28,16 @@ $ touch .gitlet
 
 ==================== init (existing dir)
 $ mkdir .gitlet
+$ echo hello > .gitlet/world
+$ mkdir .gitlet/foo
 % init
 => 0
 : A gitlet version control system already exists in the current directory.
 => 1
 ! A Gitlet repo already exists
+$ mkdir -p expected/foo
+$ echo hello > expected/world
+$ diff -r expected .gitlet || fail "init should not modify existing repos"
 
 
 ==================== init (no permission to mkdir)
