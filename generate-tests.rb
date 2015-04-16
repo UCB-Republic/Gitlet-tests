@@ -1,4 +1,5 @@
 #! /usr/bin/env ruby
+# encoding: UTF-8
 
 # Copyright 2015 Chen Ruichao <linuxer.sheep.0x@gmail.com>
 #
