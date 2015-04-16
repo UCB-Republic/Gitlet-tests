@@ -1,0 +1,71 @@
+==================== init (normal)
+% init
+# TODO @ init
+
+
+==================== init (existing regular file)
+$ touch .gitlet
+% init
+=> 0
+: A gitlet version control system already exists in the current directory.
+=> 1
+! .gitlet already exists but it is not a directory
+
+
+==================== init (existing dir)
+$ mkdir .gitlet
+% init
+=> 0
+: A gitlet version control system already exists in the current directory.
+=> 1
+! A Gitlet repo already exists
+
+
+==================== init (no permission to mkdir)
+$ chmod u-w .
+% init
+=> 0
+=> 1
+! Failed to create directory: .gitlet
+
+
+
+
+
+
+# TODO
+#     如果是没有权限访问.gitlet，FileUtil.filetype会返回什么？
+#
+#
+#
+# 注:
+#     case必须用如下格式开始:
+#         一行。20个=，然后arbitrary的东西（可以放空）
+#         （=之后的东西如果符合一定条件，会被作为类似testcase name的东西。详见代码。）
+#     case必须以1+个空行结束
+#         TODO 忽略空行。不需要结束符（遇到下一个case或者EOF的时候就视为case结束）。
+#
+#     # comment
+#     $ shell command (NOTE will be run in Bash)
+#     % Gitlet command
+#     => term stat
+#     : stdout (allow omitting the space, but if there's a space it will be consumed)
+#     ! stderr (allow omitting the space, but if there's a space it will be consumed)
+#     // TODO @ if “@ foo”, then working dir must match ${TESTCASE_DIR}/foo/wd/ (including .gitlet)
+#     //      NOTE 不支持两种模式不同的情况
+#     //空行被忽略
+#     除此之外的行都被视为错误
+#
+#     对于每个%，必须有一段:和一段!。这是为了避免“没有输出”和“输出为空”之间的歧义。
+#     （因为必须有一段:，所以如果找不到:，就意味着这段包含0行）
+#     如果没有=>，则认为是0。
+#     如果CS61B和APP两种模式行为相同，则只要写一遍=>、:、!。如果不同，则必须写两个=>和两段:和两段!，不能省略。
+#     顺序是: CS61B term stat、CS61B stdout、CS61B stderr、APP term stat、APP stdout、APP stderr
+#     $和%和@必须按照Bash的语法来quote
+#
+#     在每个case开始的时候，working dir是完全空白的。（在case结束后）
+#     TODO 目前暂无沙盒
+#     TODO 暂不支持stdin
+#     NOTE 不支持不完整的行（即: 不以LF结尾的输出）、不一定支持control chars
+#
+#
