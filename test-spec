@@ -45,7 +45,10 @@ $ chmod u-w .
 % init
 => 0
 => 1
-! Failed to create directory: .gitlet
+! IO ERROR: Failed to create directory: .gitlet
+
+
+# TODO test "initial commit"
 
 
 ==================== status (empty repo)
@@ -267,7 +270,7 @@ $ echo ooooooooooooo >> foo
 $ echo Yo > foo
 % add foo
 % commit aaa
-$ rm foo
+% rm foo
 % commit bbb
 $ echo Yo > foo
 $ echo asdf > bar
@@ -333,7 +336,9 @@ $ touch foo
 => 0
 : Please enter a commit message.
 => 2
-! Please enter a commit message.
+! Need more arguments
+! Usage: java Gitlet commit MESSAGE
+# TODO Our unified message doesn't look so nice
 
 
 ==================== commit (empty commit)
