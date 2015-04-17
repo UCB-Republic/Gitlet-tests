@@ -46,6 +46,7 @@ def compile_all
     next if $_ == '' || $_[0] == '#'
     unless '====================' == $_[0, 20]
       warn 'Invalid line: '+$_
+      $fail = true
       next
     end
     name = $_[21..-1]
@@ -170,13 +171,14 @@ def write_case_mode(filename, f, mode, data)
         f.puts "#{gitlet} #{cmd}" + ' > ../actual/stdout 2> ../actual/stderr'
 
         f.puts "TESTERVAR_TERMSTAT=$?"
-        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || fail \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
+        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] " +
+               "|| fail \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT (run ##{run_cnt})\""
 
         check_output = proc {|stream, content|
           expected = "#{filename}.d/#{run_cnt}#{suffix}.#{stream}"
           content.unshift("WARNING: Using APP mode, not suitable for CS 61B submission") if stream == 'err' && mode == 'APP'
           if content.empty?
-            f.puts "diff -q ../actual/std#{stream} /dev/null || fail 'Failure: std#{stream} should not be empty'"
+            f.puts "diff -q ../actual/std#{stream} /dev/null || fail 'Failure: std#{stream} should be empty'"
           else
             open(expected, ?w) {|f2| f2.puts(content) }
             f.puts "diff -q ../actual/std#{stream} ../'#{expected}' || fail 'Failure: std#{stream} differs from expected version'"
@@ -245,6 +247,8 @@ class CaseParser
 
   rescue BadInput => e
     warn e  # equiv to: warn(e.message); nil
+    $fail = true
+    nil
   end
 
 
@@ -285,6 +289,8 @@ end
 
 
 
+$fail = false
 $stdin = open(INPUT)
 compile_all
+fail if $fail
 
