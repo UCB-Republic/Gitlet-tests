@@ -164,7 +164,7 @@ def write_case_mode(filename, f, mode, data)
         f.puts "#{gitlet} #{cmd}" + ' > ../actual/stdout 2> ../actual/stderr'
 
         f.puts "TESTERVAR_TERMSTAT=$?"
-        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || abort \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
+        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || fail \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
 
         check_output = proc {|stream, content|
           expected = "#{filename}.d/#{run_cnt}#{suffix}.#{stream}"
