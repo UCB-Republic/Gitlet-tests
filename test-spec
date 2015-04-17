@@ -358,6 +358,7 @@ $ echo old > foo
 
 
 ==================== commit (no commit message)
+# see also "empty message"
 % init
 $ touch foo
 % add foo
@@ -425,6 +426,205 @@ $ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
 % commit wow
 $ # Temp workaround: please manually check the log
 $ java -jar ../../gitlet.jar global-log
+
+
+==================== branch (sanity check)
+% init
+% branch one
+% branch another
+% branch some-more
+
+
+==================== branch (do not change current branch)
+% init
+% status
+: === Branches ===
+: *master
+:
+: === Staged Files ===
+:
+: === Files Marked for Removal ===
+% branch z
+% status
+: === Branches ===
+: *master
+: z
+:
+: === Staged Files ===
+:
+: === Files Marked for Removal ===
+% branch haha
+% status
+: === Branches ===
+: haha
+: *master
+: z
+:
+: === Staged Files ===
+:
+: === Files Marked for Removal ===
+
+
+==================== branch (do not touch staging area)
+% init
+$ echo hello > foo
+% add foo
+% commit 'say hi'
+% rm foo
+$ echo morning > bar
+% add bar
+% status
+: === Branches ===
+: *master
+:
+: === Staged Files ===
+: bar
+:
+: === Files Marked for Removal ===
+: foo
+% branch nanosecond
+% status
+: === Branches ===
+: *master
+: nanosecond
+:
+: === Staged Files ===
+: bar
+:
+: === Files Marked for Removal ===
+: foo
+
+
+==================== branch (branch exists)
+% init
+% branch master
+=> 0
+: A branch with that name already exists.
+=> 1
+! A branch with that name already exists.
+% branch foo
+% branch foo
+=> 0
+: A branch with that name already exists.
+=> 1
+! A branch with that name already exists.
+
+
+==================== checkout (do not touch staging area)
+% init
+$ echo hello > foo
+% add foo
+% commit 'say hi'
+% rm foo
+$ echo 'Yahalo~' > bar
+% add bar
+% branch dev
+% checkout dev
+% commit "world's cutting-edge greetings"
+$ touch silence
+% rm bar
+% add silence
+% status
+: === Branches ===
+: master
+: *dev
+:
+: === Staged Files ===
+: silence
+:
+: === Files Marked for Removal ===
+: bar
+% checkout master
+: === Branches ===
+: master
+: *dev
+:
+: === Staged Files ===
+: silence
+:
+: === Files Marked for Removal ===
+: bar
+% checkout dev
+: === Branches ===
+: master
+: *dev
+:
+: === Staged Files ===
+: silence
+:
+: === Files Marked for Removal ===
+: bar
+
+
+==================== commit (message not in one argument)
+$ touch foo bar
+% init
+% add foo
+% commit 'This is a sentence'
+% add bar
+% commit This is a sentence
+=> 0
+=> 2
+! Too many arguments
+! Usage: java Gitlet commit MESSAGE
+
+
+==================== commit (empty message)
+# see also "no commit message"
+% init
+$ touch foo
+% add foo
+% commit ''
+=> 0
+: Please enter a commit message.
+=> 2
+! Please enter a non-empty commit message
+
+
+==================== commit (special message)
+$ touch {1..20}
+% init
+% add 1
+% commit .
+% add 2
+% commit ..
+% add 3
+% commit /
+% add 4
+% commit \\
+% add 5
+% commit '*'
+% add 6
+% commit ~
+
+
+==================== commit (weird message)
+$ touch {1..20}
+% init
+% add 1
+% commit 'qwertyuiopasdfghjklzxcvbnm,QWERTYUIOPASDFGHJKLZXCVBNM,1234567890'
+% add 2
+% commit '\`~!@#$%^&*()_+-=[]\{}|,./<>?:";'"'"
+% add 3
+% commit '色は匂へえど いつか散りぬるを さ迷うことさえ 許せなかった'
+% add 4
+% commit '≈₂ïç'
+% add 5
+% commit '     '
+# CJK whitespace
+% add 6
+% commit '　'
+$ # hope you don't hear weird sound (from \a)
+% add 7
+% commit $'\n\r\a\t\f\0\e'
+
+
+==================== commit (long message)
+$ touch foo
+$ msg=''; for ((i=0; i<2049; i++)); do msg+=x; done
+% init
+% add foo
+% commit "$msg"
 
 
 
