@@ -379,7 +379,21 @@ $ touch foo
 ! No changes added to the commit.
 
 
-==================== log
+==================== log (sanity check)
+$ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
+% init
+% add aaa
+% commit 1st
+% add bbb
+% commit 2nd
+% add ccc
+% commit 3rd
+% add aya
+$ # Temp workaround: please manually check the log
+$ java -jar ../../gitlet.jar log
+
+
+==================== log (should only output one chain)
 $ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
 % init
 % add aaa
@@ -397,7 +411,7 @@ $ java -jar ../../gitlet.jar log
 $ java -jar ../../gitlet.jar log
 
 
-==================== global log
+==================== global log (should output whole tree)
 $ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
 % init
 % add aaa
