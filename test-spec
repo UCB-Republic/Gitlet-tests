@@ -103,6 +103,25 @@ $ echo hello > diary
 ! File has not been modified since the last commit.
 
 
+==================== add (repeatedly add)
+% init
+$ echo hello > diary
+% add diary
+% add diary
+% add diary
+% add diary
+# should not see duplicate entries
+% status
+: === Branches ===
+: *master
+:
+: === Staged Files ===
+: diary
+:
+: === Files Marked for Removal ===
+% commit 'First day'
+
+
 ==================== add and unmark
 % init
 $ echo hello > diary
@@ -161,6 +180,149 @@ $ echo hello > diary
 : === Staged Files ===
 :
 : === Files Marked for Removal ===
+
+
+==================== remove (keep existing files)
+% init
+$ echo hello > diary
+% add diary
+% commit 'First day'
+% rm diary
+$ [[ -e diary ]] || fail "rm should not delete existing files'
+% commit 'Nobody can see my diary'
+$ [[ -e diary ]] || fail "rm should not delete existing files'
+
+
+==================== remove (file not here)
+# rm should work when file doesn't exist
+% init
+$ echo hello > diary
+% add diary
+% commit 'First day'
+$ rm diary
+% rm diary
+% commit 'Nobody can see my diary'
+
+
+==================== remove (repeatedly remove)
+% init
+$ echo hello > diary
+% add diary
+% commit 'First day'
+% rm diary
+% rm diary
+% rm diary
+% rm diary
+# should not see duplicate entries
+% status
+: === Branches ===
+: *master
+:
+: === Staged Files ===
+:
+: === Files Marked for Removal ===
+: diary
+% commit 'Nobody can see my diary'
+
+
+==================== remove (untracked files)
+# trying to remove untracked file that's not added
+% init
+$ echo hello > diary
+% add diary
+% commit 'First day'
+% rm dairy
+=> 0
+: No reason to remove the file.
+=> 1
+! Cannot remove: file was not tracked or added.
+
+
+==================== remove (empty staging area)
+% init
+% rm sth
+=> 0
+: No reason to remove the file.
+=> 1
+! Cannot remove: file was not tracked or added.
+
+
+==================== commit (normal add with sanity check)
+% init
+$ echo Yo > foo
+% add foo
+% commit 'Greetings!'
+$ echo Bye > bar
+% add bar
+$ echo Yoooooo > foo
+% add foo
+% commit lalala
+$ echo ooooooooooooo >> foo
+% add foo
+% commit 'longer foo'
+
+
+==================== commit (normal add and rm)
+% init
+$ echo Yo > foo
+% add foo
+% commit aaa
+$ rm foo
+% commit bbb
+$ echo Yo > foo
+$ echo asdf > bar
+% add foo
+% add bar
+% commit ccc
+% rm foo
+$ cp foo baz
+% add baz
+% commit ddd
+% rm baz
+% rm bar
+% commit 'nothing left'
+
+
+==================== commit (normal add with content check)
+% init
+$ echo Hey > casual
+$ echo おはようございます > polite
+% add casual
+% add polite
+% commit 'Greetings!'
+$ rm *
+% branch exotic
+% checkout exotic
+$ echo Hey > casual_expected
+$ echo おはようございます > polite_expected
+$ diff casual_expected casual || fail "file content doesn't match"
+$ diff polite_expected polite || fail "file content doesn't match"
+$ rm casual polite casual_expected polite_expected
+$ rm -r .gitlet
+$ ls -A > files; diff files /dev/null || fail "extra file(s) detected"
+
+
+==================== commit (file modified after add)
+% init
+$ echo old > foo
+% add foo
+$ echo new > foo
+% commit 'I shall store the new version'
+$ rm foo
+% checkout foo
+$ echo new > expected
+$ diff expected foo || fail "commit should take the latest version of a file, not the add time version"
+
+
+==================== commit (file marked but not modified)
+% init
+$ echo old > foo
+% add foo
+% commit 'something to begin with'
+$ echo new > foo
+% add foo
+$ echo old > foo
+% commit 'Nothing changed'
 
 
 ==================== commit (no commit message)
