@@ -295,14 +295,59 @@ $ echo おはようございます > polite
 % commit 'Greetings!'
 $ rm *
 % branch exotic
+#
+# 1st check - exotic
+#
 % checkout exotic
 $ echo Hey > casual_expected
 $ echo おはようございます > polite_expected
 $ diff casual_expected casual || fail "file content doesn't match"
 $ diff polite_expected polite || fail "file content doesn't match"
 $ rm casual polite casual_expected polite_expected
-$ rm -r .gitlet
-$ ls -A > files; diff files /dev/null || fail "extra file(s) detected"
+#$ rm -r .gitlet
+#$ ls -A
+$ ls > files; diff files /dev/null || fail "extra file(s) detected"
+$ echo Selama Pagi > weird
+% add weird
+% commit 'something from Nichijou'
+#
+# 2nd check - master
+#
+% checkout master
+$ echo Hey > casual_expected
+$ echo おはようございます > polite_expected
+# untracked files should not be removed
+$ echo Selama Pagi > weird_expected
+$ diff casual_expected casual || fail "file content doesn't match"
+$ diff polite_expected polite || fail "file content doesn't match"
+$ diff  weird_expected  weird || fail "file content doesn't match"
+$ rm casual polite weird casual_expected polite_expected weird_expected
+#$ rm -r .gitlet
+$ ls > files; diff files /dev/null || fail "extra file(s) detected"
+#
+# 3rd check - exotic
+#
+% checkout master
+$ echo Hey > casual_expected
+$ echo おはようございます > polite_expected
+$ echo Selama Pagi > weird_expected
+$ diff casual_expected casual || fail "file content doesn't match"
+$ diff polite_expected polite || fail "file content doesn't match"
+$ diff  weird_expected  weird || fail "file content doesn't match"
+$ rm casual polite weird casual_expected polite_expected weird_expected
+#$ rm -r .gitlet
+$ ls > files; diff files /dev/null || fail "extra file(s) detected"
+#
+# 4th check - master
+#
+% checkout master
+$ echo Hey > casual_expected
+$ echo おはようございます > polite_expected
+$ diff casual_expected casual || fail "file content doesn't match"
+$ diff polite_expected polite || fail "file content doesn't match"
+$ rm casual polite casual_expected polite_expected
+#$ rm -r .gitlet
+$ ls > files; diff files /dev/null || fail "extra file(s) detected"
 
 
 ==================== commit (file modified after add)
@@ -350,6 +395,40 @@ $ touch foo
 ! No changes added to the commit.
 
 
+==================== log
+$ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
+% init
+% add aaa
+% add bbb
+% commit 1st
+% branch haha
+% add ccc
+% commit more
+% checkout haha
+% add aya
+% commit wow
+$ # Temp workaround: please manually check the log
+$ java -jar ../../gitlet.jar log
+% checkout master
+$ java -jar ../../gitlet.jar log
+
+
+==================== global log
+$ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
+% init
+% add aaa
+% add bbb
+% commit 1st
+% branch haha
+% add ccc
+% commit more
+% checkout haha
+% add aya
+% commit wow
+$ # Temp workaround: please manually check the log
+$ java -jar ../../gitlet.jar global-log
+
+
 
 
 
@@ -391,5 +470,5 @@ $ touch foo
 #     NOTE 不支持不完整的行（即: 不以LF结尾的输出）、不一定支持control chars
 #
 #     Trick: You can use abort and fail in shell commands.
-#     However, do not use comments because they'll comment out the output redirections.
+#     However, do not use comments in Gitlet commands because they'll comment out the output redirections.
 #
