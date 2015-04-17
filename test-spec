@@ -428,6 +428,35 @@ $ # Temp workaround: please manually check the log
 $ java -jar ../../gitlet.jar global-log
 
 
+==================== global log (not ancestors or not even reachable)
+#                  ----  comL < master
+#  com0 ---- com1
+#                  ----  comR ---- orphan
+#                         ^
+#                        dev
+$ # Full of temp workaround
+% init
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'say hi'
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-79-len('$comid0')])")
+% branch dev
+$ echo hello > foo
+% add foo
+% commit 'say hello'
+% checkout dev
+$ echo hello > foo
+% add foo
+% commit 'hawayu'
+$ comidR=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-121-len('$comid0$comid1')])")
+% rm foo
+% commit 'to the beginning'
+% reset "$comidR"
+$ java -jar ../../gitlet.jar global-log > ../actual/stdout 2> ../actual/stderr
+$ [[ 24 == $(wc -l) ]] || fail 'global log should output all 5 commits in the tree'
+
+
 ==================== branch (sanity check)
 % init
 % branch one
@@ -744,6 +773,321 @@ $ msg=''; for ((i=0; i<2049; i++)); do msg+=x; done
 % init
 % add foo
 % commit "$msg"
+
+
+==================== reset (commit not found)
+% init
+$ # Temp workaround
+$ comid=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+% reset 000"$comid"
+=> 0
+: No commit with that id exists.
+=> 1
+! Commit does not exist
+
+
+==================== reset (back and forth on a chain)
+% init
+$ # Temp workaround
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'say hi'
+$ # Temp workaround
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-79-len('$comid0')])")
+$ echo hello > foo
+% add foo
+% commit 'say hello'
+$ # Temp workaround
+$ comid2=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-124-len('$comid0$comid1')])")
+$ # resetting when file exists
+$ touch extra
+% reset "$comid1"
+$ diff <(echo hi) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo extra; echo foo; echo .gitlet) || fail "extra/missing file(s) detected"
+% reset "$comid2"
+$ diff <(echo hello) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo extra; echo foo; echo .gitlet) || fail "extra/missing file(s) detected"
+% reset "$comid0"
+$ diff <(ls -1A) <(echo extra; echo foo; echo .gitlet) || fail "extra/missing file(s) detected"
+$ # resetting when file doesn't exist
+$ rm *
+% reset "$comid1"
+$ diff <(echo hi) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo foo; echo .gitlet) || fail "extra file(s) detected"
+$ rm *
+% reset "$comid2"
+$ diff <(echo hello) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo foo; echo .gitlet) || fail "extra file(s) detected"
+$ rm *
+% reset "$comid0"
+$ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
+
+
+==================== find (no matches)
+% init
+% find haha
+=> 0
+: Found no commit with that message.
+=> 0
+
+
+==================== find (must match whole string)
+% init
+$ # Temp workaround
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'foo bar baz'
+$ # Temp workaround
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-84-len('$comid0')])")
+$ # contains
+% find bar
+=> 0
+: Found no commit with that message.
+=> 0
+$ # startswith
+% find foo
+=> 0
+: Found no commit with that message.
+=> 0
+$ java -jar ../../gitlet.jar find 'foo bar baz' > ../actual/stdout 2> ../actual/stderr
+$ diff <(echo "$comid1") ../actual/stdout || fail "find 'foo bar baz' should list the 2nd commit"
+
+
+==================== find (3 different messages)
+$ # Full of temp workaround
+% init
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'say hi'
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-79-len('$comid0')])")
+$ echo hello > foo
+% add foo
+% commit 'say hello'
+$ comid2=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-124-len('$comid0$comid1')])")
+$ # stderr is not checked
+$ java -jar ../../gitlet.jar find 'say hi' > ../actual/stdout 2> ../actual/stderr
+$ diff <(echo "$comid1") ../actual/stdout || fail 'find hi should list the 2nd commit'
+$ java -jar ../../gitlet.jar find 'say hello' > ../actual/stdout 2> ../actual/stderr
+$ diff <(echo "$comid2") ../actual/stdout || fail 'find hello should list the 3rd commit'
+$ java -jar ../../gitlet.jar find 'initial commit' > ../actual/stdout 2> ../actual/stderr
+$ diff <(echo "$comid0") ../actual/stdout || fail 'find initial should list the 1st commit'
+
+
+==================== find (3 commits with same messages)
+$ # Full of temp workaround
+% init
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'initial commit'
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-87-len('$comid0')])")
+$ echo hello > foo
+% add foo
+% commit 'initial commit'
+$ comid2=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-137-len('$comid0$comid1')])")
+$ # stderr is not checked
+$ java -jar ../../gitlet.jar find 'initial commit' > ../actual/stdout 2> ../actual/stderr
+$ diff <(echo "$comid0"; echo "$comid1"; echo "$comid2") ../actual/stdout || fail 'all 3 commits should be listed'
+
+
+==================== find (not ancestors or not even reachable)
+#                  ----  comL* < master
+#  com0* --- com1
+#                  ----  comR ---- orphan*
+#                         ^
+#                        dev
+$ # Full of temp workaround
+% init
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'say hi'
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-79-len('$comid0')])")
+% branch dev
+$ echo hello > foo
+% add foo
+% commit 'initial commit'
+$ comidL=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-129-len('$comid0$comid1')])")
+% checkout dev
+$ echo hello > foo
+% add foo
+% commit 'actually hello'
+$ comidR=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-129-len('$comid0$comid1')])")
+% rm foo
+% commit 'initial commit'
+$ comidOrphan=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-179-len('$comid0$comid1$comidR')])")
+% reset "$comidR"
+$ # stderr is not checked
+$ java -jar ../../gitlet.jar find 'initial commit' > ../actual/stdout 2> ../actual/stderr
+$ diff <(echo "$comid0"; echo "$comidL"; echo "$comidOrphan") ../actual/stdout || fail 'all commits should be findable'
+
+
+==================== merge (simple test)
+#                  ----  comL < master (foo, bar)
+#  com0 ---- com1
+#                  ----  comR < dev (foo, baz)
+#
+# XXX This test assumes merging doesn't recreate "our" files
+#     Different people may have different implementation.
+#
+$ # Full of temp workaround
+% init
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo; echo I never change > eternal
+% add foo
+% add eternal
+% commit 'say hi'
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-79-len('$comid0')])")
+% branch dev
+$ echo hello > foo; echo yo > bar
+% add foo
+% add bar
+% commit 'say hello'
+$ comidL=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-124-len('$comid0$comid1')])")
+% checkout dev
+$ echo hawayu > foo; echo good morning > baz
+% add foo
+% add baz
+% commit 'hawayu'
+$ rm *
+% merge master
+$ diff <(echo hello) foo.conflicted || fail "file content doesn't match"
+$ diff <(echo yo   ) bar            || fail "file content doesn't match"
+$ rm foo.conflicted bar
+$ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
+
+
+==================== merge (with future)
+# XXX This test assumes merging doesn't recreate "our" files
+#     Different people may have different implementation.
+#
+% init
+$ echo hi > foo; echo I never change > eternal
+% add foo
+% add eternal
+% commit 'say hi'
+% branch dev
+$ echo hello > foo; echo yo > bar
+% add foo
+% add bar
+% commit 'say hello'
+% checkout dev
+$ rm *
+% merge master
+$ diff <(echo hello) foo || fail "file content doesn't match"
+$ diff <(echo yo   ) bar || fail "file content doesn't match"
+$ rm foo bar
+$ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
+
+
+==================== merge (with past)
+# XXX This test assumes merging doesn't recreate "our" files
+#     Different people may have different implementation.
+#
+% init
+$ echo hi > foo; echo I never change > eternal
+% add foo
+% add eternal
+% commit 'say hi'
+% branch dev
+$ echo hello > foo; echo yo > bar
+% add foo
+% add bar
+% commit 'say hello'
+$ rm *
+% merge dev
+$ # Temp workaround
+$ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
+
+
+==================== merge (branch not found)
+% init
+% merge mysterious
+=> 0
+: A branch with that name does not exist.
+=> 1
+! Branch does not exist
+
+
+==================== merge (merge self)
+% init
+% merge master
+=> 0
+: Cannot merge a branch with itself.
+=> 0
+! Already up to date
+
+
+==================== rebase (branch not found)
+% init
+% rebase mysterious
+=> 0
+: A branch with that name does not exist.
+=> 1
+! Branch does not exist
+
+
+==================== rebase (onto self)
+% init
+% rebase master
+=> 0
+: Cannot rebase a branch onto itself.
+=> 0
+
+
+==================== rebase (onto future)
+% init
+$ echo hi > foo; echo I never change > eternal
+% add foo
+% add eternal
+% commit 'say hi'
+% branch dev
+$ echo hello > foo; echo yo > bar
+% add foo
+% add bar
+% commit 'say hello'
+$ echo hawayu > foo; echo good morning > baz
+% add foo
+% add baz
+% commit 'good morning'
+$ java -jar ../../gitlet.jar log > ../actual/masterlog 2> ../actual/stderr
+% checkout dev
+$ rm *
+% rebase master
+$ java -jar ../../gitlet.jar log > ../actual/devlog 2> ../actual/stderr
+$ diff ../actual/masterlog ../actual/devlog || fail "rebasing onto a future commit should only move the branch pointer"
+$ diff <(echo I never change) eternal || fail "file content doesn't match"
+$ diff <(echo hawayu        ) foo     || fail "file content doesn't match"
+$ diff <(echo yo            ) bar     || fail "file content doesn't match"
+$ diff <(echo good morning  ) baz     || fail "file content doesn't match"
+$ rm eternal foo bar baz
+$ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
+$ java -jar ../../gitlet.jar log > ../actual/stdout 2> ../actual/stderr
+
+
+==================== rebase (onto past)
+% init
+$ echo hi > foo; echo I never change > eternal
+% add foo
+% add eternal
+% commit 'say hi'
+% branch dev
+$ echo hello > foo; echo yo > bar
+% add foo
+% add bar
+% commit 'say hello'
+$ echo hawayu > foo; echo good morning > baz
+% add foo
+% add baz
+% commit 'good morning'
+% rebase dev
+=> 0
+: Already up-to-date.
+=> 0
+! Already up-to-date.
 
 
 
