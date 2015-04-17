@@ -158,9 +158,15 @@ def write_case_mode(filename, f, mode, data)
         termstat, stdout, stderr = cmddata[whichdata]
         run_cnt += 1
 
+        confirm = false
+        %w(checkout reset merge rebase i-rebase pull).each {|c|
+          confirm = true if cmd.start_with? (c+' ')
+        }
+
         f.puts "cat <<EOF"
         f.puts "Running:    gitlet #{cmd}"
         f.puts "EOF"
+        f.write "echo yes | " if confirm
         f.puts "#{gitlet} #{cmd}" + ' > ../actual/stdout 2> ../actual/stderr'
 
         f.puts "TESTERVAR_TERMSTAT=$?"
