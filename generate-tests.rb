@@ -68,12 +68,13 @@ def write_testrunner(tests)
       break unless BOTHMODES
     }
     ios.write("\ntypeset -i failcnt=0\nresultbar=''\n")
-    ios.write("function record() { if [[ $1 == 0 ]]; then resultbar+='✓'; else failcnt+=1; resultbar+='✗'; fi; }\n\n")
-    tests.each {|t|
+    ios.write("function record() { if [[ $1 == 0 ]]; then resultbar+=$'\\e[0m\\e[32m✓'; else failcnt+=1; resultbar+=$'\\e[1m\\e[31m✗'; fi; }\n\n")
+    tests.each_with_index {|t, i|
+      ios.puts("resultbar+=' '") if i%10 == 0
       ios.puts("echo '==================== #{t} ===================='",
-               "./'#{t}'; record $?")
+               "./'#{t}'; record $?; echo")
     }
-    ios.write("\necho; echo Results: $resultbar; echo \"$failcnt failure(s) out of\"; echo '#{tests.size} total testcase(s)'")
+    ios.write("\necho; echo Results: $resultbar$'\\e[0m'; echo \"$failcnt failure(s) out of\"; echo '#{tests.size} total testcase(s)'")
   end
 end
 
@@ -149,7 +150,7 @@ def write_case_mode(filename, f, mode, data)
     case type
       when :shell
         f.puts 'cat <<EOF'
-        f.puts 'Running: ' + cmd
+        f.puts 'Running:    ' + cmd
         f.puts 'EOF'
         f.puts cmd
 
@@ -158,12 +159,12 @@ def write_case_mode(filename, f, mode, data)
         run_cnt += 1
 
         f.puts "cat <<EOF"
-        f.puts "Running: #{gitlet} #{cmd}"
+        f.puts "Running:    gitlet #{cmd}"
         f.puts "EOF"
         f.puts "#{gitlet} #{cmd}" + ' > ../actual/stdout 2> ../actual/stderr'
 
         f.puts "TESTERVAR_TERMSTAT=$?"
-        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || fail \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
+        f.puts "[[ $TESTERVAR_TERMSTAT == #{termstat} ]] || abort \"Expected \\$?: #{termstat} actual: $TESTERVAR_TERMSTAT\""
 
         check_output = proc {|stream, content|
           expected = "#{filename}.d/#{run_cnt}#{suffix}.#{stream}"
