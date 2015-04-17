@@ -9,7 +9,7 @@
 % whosyourdaddy
 => 0
 => 2
-! Unknown command whosyourdaddy
+! Unknown command: whosyourdaddy
 
 
 ==================== init (normal)
@@ -75,8 +75,8 @@ $ touch wug.txt some_folder/wugs.txt goodbye.txt
 : other-branch
 :
 : === Staged Files ===
-: wug.txt
 : some_folder/wugs.txt
+: wug.txt
 :
 : === Files Marked for Removal ===
 : goodbye.txt
@@ -88,15 +88,15 @@ $ touch wug.txt some_folder/wugs.txt goodbye.txt
 => 0
 : File does not exist.
 => 1
-! File does not exist.
+! File does not exist: foo
 
 
 ==================== add (file not modified)
 % init
-$ echo hello > dairy
-% add dairy
+$ echo hello > diary
+% add diary
 % commit 'First day'
-% add dairy
+% add diary
 => 0
 : File has not been modified since the last commit.
 => 1
@@ -105,7 +105,7 @@ $ echo hello > dairy
 
 ==================== add and unmark
 % init
-$ echo hello > dairy
+$ echo hello > diary
 % status
 : === Branches ===
 : *master
@@ -113,16 +113,16 @@ $ echo hello > dairy
 : === Staged Files ===
 :
 : === Files Marked for Removal ===
-% add dairy
+% add diary
 % status
 : === Branches ===
 : *master
 :
 : === Staged Files ===
-: dairy
+: diary
 :
 : === Files Marked for Removal ===
-% rm dairy
+% rm diary
 % status
 : === Branches ===
 : *master
@@ -134,8 +134,8 @@ $ echo hello > dairy
 
 ==================== remove and unmark
 % init
-$ echo hello > dairy
-% add dairy
+$ echo hello > diary
+% add diary
 % commit 'First day'
 % status
 : === Branches ===
@@ -144,7 +144,7 @@ $ echo hello > dairy
 : === Staged Files ===
 :
 : === Files Marked for Removal ===
-% rm dairy
+% rm diary
 % status
 : === Branches ===
 : *master
@@ -152,8 +152,8 @@ $ echo hello > dairy
 : === Staged Files ===
 :
 : === Files Marked for Removal ===
-: dairy
-% add dairy
+: diary
+% add diary
 % status
 : === Branches ===
 : *master
@@ -223,4 +223,6 @@ $ touch foo
 #     TODO 暂不支持stdin
 #     NOTE 不支持不完整的行（即: 不以LF结尾的输出）、不一定支持control chars
 #
+#     Trick: You can use abort and fail in shell commands.
+#     However, do not use comments because they'll comment out the output redirections.
 #
