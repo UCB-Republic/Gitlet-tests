@@ -558,6 +558,123 @@ $ touch silence
 : bar
 
 
+==================== checkout file (do not touch staging area)
+% init
+$ # Temp workaround
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'say hi'
+$ # Temp workaround
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-79-len('$comid0')])")
+$ echo hello > foo
+% add foo
+% commit 'say hello'
+$ echo 'Yahalo~' > bar
+% add bar
+% rm foo
+% checkout "$comid1" foo
+% status
+: === Branches ===
+: *master
+:
+: === Staged Files ===
+: bar
+:
+: === Files Marked for Removal ===
+: foo
+% checkout foo
+% status
+: === Branches ===
+: *master
+:
+: === Staged Files ===
+: bar
+:
+: === Files Marked for Removal ===
+: foo
+
+
+==================== checkout branch (checking out current branch)
+% init
+% checkout master
+=> 0
+: No need to checkout the current branch.
+=> 1
+! No need to checkout the current branch.
+
+
+==================== checkout branch (branch not found)
+% init
+% checkout future-version
+=> 0
+: File does not exist in the most recent commit, or no such branch exists.
+=> 1
+! No matching branch and no matching file in the current commit
+
+
+==================== checkout file (commit not found)
+# There's at most one commit, so if we try two IDs, at least one will fail.
+# We won't bother to do that, though.
+% init
+$ # Temp workaround
+$ comid=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+% checkout 000"$comid" myfile
+=> 0
+: No commit with that id exists.
+=> 1
+! Commit does not exist
+
+
+==================== checkout file (file not found)
+% init
+$ # Temp workaround
+$ comid=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ touch foo
+% add foo
+% commit foo
+% checkout myfile
+=> 0
+: File does not exist in the most recent commit, or no such branch exists.
+=> 1
+! No matching branch and no matching file in the current commit
+% checkout "$comid" myfile
+=> 0
+: File does not exist in that commit.
+=> 1
+! File does not exist in the specified commit
+
+
+==================== checkout file (normal operation)
+% init
+$ # Temp workaround
+$ comid0=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c 'import sys; print(sys.stdin.read()[12:-37])')
+$ echo hi > foo
+% add foo
+% commit 'say hi'
+$ # Temp workaround
+$ comid1=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; print(sys.stdin.read()[12:-79-len('$comid0')])")
+$ echo hello > foo
+% add foo
+% commit 'say hello'
+$ # checking out when file exists
+% checkout "$comid1" foo
+$ diff <(echo hi) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo foo; echo .gitlet) || fail "extra file(s) detected"
+% checkout foo
+$ diff <(echo hello) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo foo; echo .gitlet) || fail "extra file(s) detected"
+$ # checking out when file doesn't exist
+$ rm foo
+% checkout foo
+$ diff <(echo hello) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo foo; echo .gitlet) || fail "extra file(s) detected"
+$ rm foo
+% checkout "$comid1" foo
+$ diff <(echo hi) foo  || fail "file content doesn't match"
+$ diff <(ls -1A) <(echo foo; echo .gitlet) || fail "extra file(s) detected"
+
+
 ==================== commit (message not in one argument)
 $ touch foo bar
 % init
