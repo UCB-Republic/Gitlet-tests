@@ -191,9 +191,9 @@ $ echo hello > diary
 % add diary
 % commit 'First day'
 % rm diary
-$ [[ -e diary ]] || fail "rm should not delete existing files'
+$ [[ -e diary ]] || fail 'rm should not delete existing files'
 % commit 'Nobody can see my diary'
-$ [[ -e diary ]] || fail "rm should not delete existing files'
+$ [[ -e diary ]] || fail 'rm should not delete existing files'
 
 
 ==================== remove (file not here)
@@ -319,7 +319,7 @@ $ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
 #
 # 3rd check - exotic
 #
-% checkout master
+% checkout exotic
 $ diff <(echo Hey               ) casual || fail "file content doesn't match"
 $ diff <(echo おはようございます) polite || fail "file content doesn't match"
 $ diff <(echo Selama Pagi       ) weird  || fail "file content doesn't match"
@@ -510,7 +510,7 @@ $ echo morning > bar
 ! A branch with that name already exists.
 
 
-==================== checkout (do not touch staging area)
+==================== checkout branch (do not touch staging area)
 % init
 $ echo hello > foo
 % add foo
@@ -526,8 +526,8 @@ $ touch silence
 % add silence
 % status
 : === Branches ===
-: master
 : *dev
+: master
 :
 : === Staged Files ===
 : silence
@@ -535,9 +535,10 @@ $ touch silence
 : === Files Marked for Removal ===
 : bar
 % checkout master
+% status
 : === Branches ===
-: master
-: *dev
+: dev
+: *master
 :
 : === Staged Files ===
 : silence
@@ -545,9 +546,10 @@ $ touch silence
 : === Files Marked for Removal ===
 : bar
 % checkout dev
+% status
 : === Branches ===
-: master
 : *dev
+: master
 :
 : === Staged Files ===
 : silence
