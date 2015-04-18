@@ -1198,6 +1198,216 @@ $ echo hawayu > foo; echo good morning > baz
 ! Already up-to-date.
 
 
+#==================== complex (HMTest)
+#$ mkdir yourtestFiles
+#$ # initializing...
+#% init
+#$ # building a complex enough Git...
+#$ echo "PII: file that's very old" > yourtestFiles/PII.txt
+#$ echo "PI: file that's no one knows what it is" > yourtestFiles/PI.txt
+#$ echo "commmon1: Apple WATCH PRICE: 20,000USD. Are you going to buy?" > yourtestFiles/common1.txt
+#$ echo "commmon2: This Summer: 61C Class sucks" > yourtestFiles/common2.txt
+#$ echo "commmon3: Should You go to MIT instead?" > yourtestFiles/common3.txt
+#% add yourtestFiles/PII.txt
+#% add yourtestFiles/common1.txt
+#% add yourtestFiles/common2.txt
+#% add yourtestFiles/common3.txt
+#% add yourtestFiles/PI.txt
+#$ # ORIGIN
+#% commit ORIGIN
+#% branch F
+#% rm yourtestFiles/PII.txt
+## change common2.txt
+#$ echo "commmon2: This Summer: 61C Class rocks!" > yourtestFiles/common2.txt
+#% add yourtestFiles/common2.txt
+#$ # PI
+#% commit PI
+#% branch C
+#$ echo "GI: file that's miracle" > yourtestFiles/GI.txt
+#% add yourtestFiles/GI.txt
+#$ # GI
+#% commit GI
+#$ echo "GII: file that's changing everything" > yourtestFiles/GII.txt
+#% add yourtestFiles/GII.txt
+#$ echo "commmon1: Apple WATCH PRICE: 20,000USD. Buy the cheap one you idiot!" > yourtestFiles/common1.txt
+## change common1.txt
+#% add yourtestFiles/common1.txt
+#$ # GII
+#% commit GII
+#% branch D
+#% rm yourtestFiles/common3.txt
+#$ # MI
+#% commit MI
+#$ echo "MII: file that's improving over G" > yourtestFiles/MII.txt
+#% add yourtestFiles/MII.txt
+#$ # MII
+#% commit MII
+#% add yourtestFiles/common3.txt
+#$ # MIII
+#% commit MIII
+#$ echo "HI: I added a new app to this pool" > yourtestFiles/HI.txt
+#% checkout D
+#% add yourtestFiles/HI.txt
+#$ # HI
+#% commit HI
+## change common2.txt
+#$ echo "commmon2: This Summer: 61C Don't need it any more , take the OS class instead!" > yourtestFiles/common2.txt
+#% add yourtestFiles/common2.txt
+#$ # HII
+#% commit HII
+#$ echo "DI: Revenue increased by this new feature!" > yourtestFiles/DI.txt
+#% branch E
+#% add yourtestFiles/DI.txt
+#% rm yourtestFiles/common2.txt
+#$ # DI
+#% commit DI
+#$ echo "EI: ok we overestimated the revenue" > yourtestFiles/EI.txt
+#% checkout E
+#% add yourtestFiles/EI.txt
+#$ # EI
+#% commit EI
+#$ echo "CI: this is a garbage branch. Level 1" > yourtestFiles/CI.txt
+#% checkout C
+#% add yourtestFiles/CI.txt
+#$ # CI
+#% commit CI
+#% rm yourtestFiles/common2.txt
+#$ # CII
+#% commit CII
+#% add yourtestFiles/common2.txt
+#$ # CIII
+#% commit CIII
+#$ echo "CIV: this is a 'garbage' branch. Level 4" > yourtestFiles/CIV.txt
+#% add yourtestFiles/CIV.txt
+#$ # CIV
+#% commit CIV
+#% checkout F
+#% rm yourtestFiles/PI.txt
+#$ echo "commmon1: We go bankrupt, no Apple Watches" > yourtestFiles/common1.txt
+#$ echo "commmon2: the department is shutting" > yourtestFiles/common2.txt
+#$ echo "commmon3: find jobs in Microsoft now." > yourtestFiles/common3.txt
+#% add yourtestFiles/common1.txt
+#% add yourtestFiles/common2.txt
+#% add yourtestFiles/common3.txt
+#$ # PII
+#% commit PII
+#% branch A
+#$ echo "FI: Luckily we are still alive" > yourtestFiles/FI.txt
+#% rm yourtestFiles/PII.txt
+#% add yourtestFiles/FI.txt
+#$ # FI
+#% commit FI
+#$ echo "QI: I am who is still living" > yourtestFiles/QI.txt
+#% checkout A
+#% add yourtestFiles/QI.txt
+## change common2
+#$ echo "commmon2: a small group of people survived and we are making a new game for product!" > yourtestFiles/common2.txt
+#% add yourtestFiles/common2.txt
+#$ # QI
+#% commit QI
+#% branch B
+#% rm yourtestFiles/common2.txt
+#$ # AI
+#% commit AI
+#% rm yourtestFiles/common3.txt
+## change common1
+#$ echo "commmon1: funding stage arrived! we are hiring.." > yourtestFiles/common1.txt
+#% add yourtestFiles/common1.txt
+#$ # AII
+#% commit AII
+#$ echo "AIII: sunny day!" > yourtestFiles/AIII.txt
+#% add yourtestFiles/AIII.txt
+#$ # AIII
+#% commit AIII
+#% checkout B
+#% rm yourtestFiles/common1.txt
+#$ # BI
+#% commit BI
+#$ echo "BII: sleeping, huh? I guess this is the end of our branch!" > yourtestFiles/BII.txt
+#% rm yourtestFiles/common2.txt
+#% add yourtestFiles/BII.txt
+#$ # BII
+#% commit BII
+#% add yourtestFiles/common1.txt
+#$ # BIII
+#% commit BIII
+#$ # building finished
+#$ mkdir testResultsYours
+#$ # Now testing merge case 1...Branch A and C
+#% checkout A
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% merge C
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#$ cat yourtestFiles/* > testResultsYours/merge_1.txt
+#$ # There should be no conflicted files
+#$ # Now testing merge case 2...Branch D and Master
+#% checkout D
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% merge master
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#$ cat yourtestFiles/* > testResultsYours/merge_2.txt
+#$ # There should be no conflicted files
+#$ # Now testing merge case 3...Branch D and E
+#% checkout D
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% merge E
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#$ cat yourtestFiles/* > testResultsYours/merge_3.txt
+#$ # There should be no conflicted files
+#$ # Now testing merge case 4...Branch B and C
+#% checkout B
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% merge C
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#$ cat yourtestFiles/* > testResultsYours/merge_4.txt
+#$ # There should be no conflicted files
+#$ # Now testing merge case 5...Branch B and master
+#% checkout B
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% merge master
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#$ cat yourtestFiles/* > testResultsYours/merge_5.txt
+#$ # There should be conflicted files
+#$ rm -r yourtestFiles/*.conflicted
+#$ # Now testing merge case 6...Branch A and B
+#% checkout A
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% merge B
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#$ cat yourtestFiles/* > testResultsYours/merge_6.txt
+#$ # There should be conflicted files
+#$ rm -r yourtestFiles/*.conflicted
+#$ # Now testing rebase...
+#$ # Now testing rebasing case 1...Branch A to master
+#% checkout A
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% rebase master
+#$ cat yourtestFiles/* > testResultsYours/rebase_1.txt
+#$ # Now testing rebasing case 2...Branch C to D
+#% checkout C
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% rebase D
+#$ cat yourtestFiles/* > testResultsYours/rebase_2.txt
+#$ # Now testing rebasing case 3...Branch B to E
+#% checkout B
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% rebase E
+#$ cat yourtestFiles/* > testResultsYours/rebase_3.txt
+#$ # Now testing rebasing case 4...Branch master to C
+#% checkout master
+#: Warning: The command you entered may alter the files in your working directory. Uncommitted changes may be lost. Are you sure you want to continue? (yes/no)
+#% rebase C
+#$ cat yourtestFiles/* > testResultsYours/rebase_4.txt
+# TODO diff merge_1.txt || fail 'Merge 1 failed'
+# TODO diff merge_2.txt || fail 'Merge 2 failed'
+# TODO diff merge_3.txt || fail 'Merge 3 failed'
+# TODO diff merge_4.txt || fail 'Merge 4 failed'
+# TODO diff merge_5.txt || fail 'Merge 5 failed'
+# TODO diff merge_5.txt || fail 'Merge 6 failed'
+# TODO diff merge_1.txt || fail 'Rebase 1 failed'
+# TODO diff merge_2.txt || fail 'Rebase 2 failed'
+# TODO diff merge_3.txt || fail 'Rebase 3 failed'
+# TODO diff merge_4.txt || fail 'Rebase 4 failed'
 
 
 
