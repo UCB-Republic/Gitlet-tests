@@ -1124,6 +1124,82 @@ $ echo hawayu > foo; echo good morning > baz
 ! Already up-to-date.
 
 
+==================== interactive rebase (branch not found)
+% init
+% i-rebase mysterious
+=> 0
+: A branch with that name does not exist.
+=> 1
+! Branch does not exist
+
+
+==================== interactive rebase (onto self)
+% init
+% i-rebase master
+=> 0
+: Cannot rebase a branch onto itself.
+=> 0
+
+
+# TODO ==================== interactive rebase (onto future)
+## XXX This test assumes fast-forward also updates working directory.
+##     Different people may have different implementation.
+#% init
+#$ echo hi > foo; echo I never change > eternal
+#% add foo
+#% add eternal
+#% commit 'say hi'
+#% branch dev
+#$ echo hello > foo; echo yo > bar
+#% add foo
+#% add bar
+#% commit 'say hello'
+#$ echo hawayu > foo; echo good morning > baz
+#% add foo
+#% add baz
+#% commit 'good morning'
+#$ java -jar ../../gitlet.jar log        > ../actual/masterlog       2> ../actual/stderr
+#$ java -jar ../../gitlet.jar global-log > ../actual/mastergloballog 2> ../actual/stderr
+#% checkout dev
+#$ rm *
+#% rebase master
+#$ java -jar ../../gitlet.jar log        > ../actual/devlog          2> ../actual/stderr
+#$ java -jar ../../gitlet.jar global-log > ../actual/devgloballog    2> ../actual/stderr
+#$ diff ../actual/masterlog       ../actual/devlog       || fail "rebasing onto a future commit should only move the branch pointer"
+#$ diff ../actual/mastergloballog ../actual/devgloballog || fail "rebasing onto a future commit should only move the branch pointer"
+#$ diff <(echo I never change) eternal || fail "file content doesn't match"
+#$ diff <(echo hawayu        ) foo     || fail "file content doesn't match"
+#$ diff <(echo yo            ) bar     || fail "file content doesn't match"
+#$ diff <(echo good morning  ) baz     || fail "file content doesn't match"
+#$ rm eternal foo bar baz
+#$ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
+#$ java -jar ../../gitlet.jar log > ../actual/stdout 2> ../actual/stderr
+
+
+==================== interactive rebase (onto past)
+% init
+$ echo hi > foo; echo I never change > eternal
+% add foo
+% add eternal
+% commit 'say hi'
+% branch dev
+$ echo hello > foo; echo yo > bar
+% add foo
+% add bar
+% commit 'say hello'
+$ echo hawayu > foo; echo good morning > baz
+% add foo
+% add baz
+% commit 'good morning'
+% i-rebase dev
+=> 0
+: Already up-to-date.
+=> 0
+! Already up-to-date.
+
+
+
+
 
 
 
