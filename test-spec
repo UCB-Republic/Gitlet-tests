@@ -390,8 +390,15 @@ $ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
 % add ccc
 % commit 3rd
 % add aya
-$ # Temp workaround: please manually check the log
-$ java -jar ../../gitlet.jar log
+$ java -jar ../../gitlet.jar log > ../actual/stdout 2> ../actual/stderr
+$ grep -q 3rd ../actual/stdout || fail 'log output should contain the 3rd commit'
+$ grep -q 2nd ../actual/stdout || fail 'log output should contain the 2nd commit'
+$ grep -q 1st ../actual/stdout || fail 'log output should contain the 1st commit'
+$ grep -q 'initial commit' ../actual/stdout || fail 'log output should contain the 0th commit'
+
+
+# TODO ==================== log (format check)
+# TODO ==================== log (order check)
 
 
 ==================== log (should only output one chain)
@@ -406,10 +413,23 @@ $ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
 % checkout haha
 % add aya
 % commit wow
-$ # Temp workaround: please manually check the log
-$ java -jar ../../gitlet.jar log
+$ java -jar ../../gitlet.jar log > ../actual/stdout 2> ../actual/stderr
+$ [[ 14 == $(wc -l < ../actual/stdout) ]] || fail 'log should output exactly 3 commits'
+$ grep -q more ../actual/stdout && fail 'log output should not contain the "more" commit'
+$ grep -q wow  ../actual/stdout || fail 'log output should contain the "wow" commit'
+$ grep -q 1st  ../actual/stdout || fail 'log output should contain the "1st" commit'
+$ grep -q 'initial commit' ../actual/stdout || fail 'log output should contain the initial commit'
 % checkout master
-$ java -jar ../../gitlet.jar log
+$ java -jar ../../gitlet.jar log > ../actual/stdout 2> ../actual/stderr
+$ [[ 14 == $(wc -l < ../actual/stdout) ]] || fail 'log should output exactly 3 commits'
+$ grep -q wow  ../actual/stdout && fail 'log output should not contain the "wow" commit'
+$ grep -q more ../actual/stdout || fail 'log output should contain the "more" commit'
+$ grep -q 1st  ../actual/stdout || fail 'log output should contain the "1st" commit'
+$ grep -q 'initial commit' ../actual/stdout || fail 'log output should contain the initial commit'
+
+
+# TODO ==================== global log (format check)
+# TODO ==================== global log (order check)
 
 
 ==================== global log (should output whole tree)
@@ -424,8 +444,12 @@ $ echo 123 > aaa; echo 456 > bbb; echo 789 > ccc; echo yay > aya
 % checkout haha
 % add aya
 % commit wow
-$ # Temp workaround: please manually check the log
-$ java -jar ../../gitlet.jar global-log
+$ java -jar ../../gitlet.jar global-log > ../actual/stdout 2> ../actual/stderr
+$ [[ 19 == $(wc -l < ../actual/stdout) ]] || fail 'global log should output all 4 commits in the tree'
+$ grep -q wow  ../actual/stdout || fail 'log output should not contain the "wow" commit'
+$ grep -q more ../actual/stdout || fail 'log output should contain the "more" commit'
+$ grep -q 1st  ../actual/stdout || fail 'log output should contain the "1st" commit'
+$ grep -q 'initial commit' ../actual/stdout || fail 'log output should contain the initial commit'
 
 
 ==================== global log (not ancestors or not even reachable)
@@ -454,7 +478,12 @@ $ comidR=$(java -jar ../../gitlet.jar log 2>/dev/null | python3 -c "import sys; 
 % commit 'to the beginning'
 % reset "$comidR"
 $ java -jar ../../gitlet.jar global-log > ../actual/stdout 2> ../actual/stderr
-$ [[ 24 == $(wc -l) ]] || fail 'global log should output all 5 commits in the tree'
+$ [[ 24 == $(wc -l < ../actual/stdout) ]] || fail 'global log should output all 5 commits in the tree'
+$ grep -q 'to the beginning' ../actual/stdout || fail 'log output should contain orphaned commits'
+$ grep -q 'hawayu'           ../actual/stdout || fail 'log output should contain the current commit'
+$ grep -q 'say hello'        ../actual/stdout || fail 'log output should contain commits in other branches'
+$ grep -q 'say hi'           ../actual/stdout || fail 'log output should contain the split point'
+$ grep -q 'initial commit'   ../actual/stdout || fail 'log output should contain the initial commit'
 
 
 ==================== branch (sanity check)
@@ -1039,6 +1068,8 @@ $ diff <(ls -1A) <(echo .gitlet) || fail "extra file(s) detected"
 
 
 ==================== rebase (onto future)
+# XXX This test assumes fast-forward also updates working directory.
+#     Different people may have different implementation.
 % init
 $ echo hi > foo; echo I never change > eternal
 % add foo
@@ -1053,12 +1084,15 @@ $ echo hawayu > foo; echo good morning > baz
 % add foo
 % add baz
 % commit 'good morning'
-$ java -jar ../../gitlet.jar log > ../actual/masterlog 2> ../actual/stderr
+$ java -jar ../../gitlet.jar log        > ../actual/masterlog       2> ../actual/stderr
+$ java -jar ../../gitlet.jar global-log > ../actual/mastergloballog 2> ../actual/stderr
 % checkout dev
 $ rm *
 % rebase master
-$ java -jar ../../gitlet.jar log > ../actual/devlog 2> ../actual/stderr
-$ diff ../actual/masterlog ../actual/devlog || fail "rebasing onto a future commit should only move the branch pointer"
+$ java -jar ../../gitlet.jar log        > ../actual/devlog          2> ../actual/stderr
+$ java -jar ../../gitlet.jar global-log > ../actual/devgloballog    2> ../actual/stderr
+$ diff ../actual/masterlog       ../actual/devlog       || fail "rebasing onto a future commit should only move the branch pointer"
+$ diff ../actual/mastergloballog ../actual/devgloballog || fail "rebasing onto a future commit should only move the branch pointer"
 $ diff <(echo I never change) eternal || fail "file content doesn't match"
 $ diff <(echo hawayu        ) foo     || fail "file content doesn't match"
 $ diff <(echo yo            ) bar     || fail "file content doesn't match"
@@ -1108,7 +1142,7 @@ $ echo hawayu > foo; echo good morning > baz
 #         TODO 忽略空行。不需要结束符（遇到下一个case或者EOF的时候就视为case结束）。
 #
 #     # comment
-#     $ shell command (NOTE will be run in Bash)
+#     $ shell command (NOTE will be run in Bash) (TODO 现在用heredoc会导致某些expansion在“注释”中还是会生效)
 #     % Gitlet command
 #     => term stat
 #     : stdout (allow omitting the space, but if there's a space it will be consumed)
